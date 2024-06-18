@@ -23,8 +23,10 @@ _DATASET_FRIENDLY_NAME_MAP = {
     'google-trends-2017': 'Google-Trends',
     'l3s-gn1': 'L3S-GN1',
     'readability': 'Readability',
-    'scrapinghub': 'Scrapinghub'
+    'scrapinghub': 'Scrapinghub',
+    'custom': 'Custom',
 }
+
 
 if os.path.isdir(DATASET_RAW_PATH):
     DATASETS = {k: _DATASET_FRIENDLY_NAME_MAP.get(k, k) for k in os.listdir(DATASET_RAW_PATH)

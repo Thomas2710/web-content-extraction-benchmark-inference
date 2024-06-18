@@ -17,8 +17,13 @@ import os
 ROOT_PATH = os.path.realpath(os.path.join(os.getcwd()))
 DATASET_PATH = os.path.join(ROOT_PATH, 'datasets')
 
+
+
+URL_PATH = os.path.join(DATASET_PATH, 'urls')
+URL_HTML_PATH = os.path.join(URL_PATH, 'html')
 DATASET_RAW_PATH = os.path.join(DATASET_PATH, 'raw')
 DATASET_COMBINED_PATH = os.path.join(DATASET_PATH, 'combined')
+
 DATASET_COMBINED_TRUTH_PATH = os.path.join(DATASET_COMBINED_PATH, 'ground-truth')
 DATASET_COMBINED_HTML_PATH = os.path.join(DATASET_COMBINED_PATH, 'html')
 

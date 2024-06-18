@@ -316,6 +316,17 @@ class GoogleTrends2017Reader(L3SGN1Reader):
     def dataset_size(self) -> Optional[int]:
         return len(glob.glob(os.path.join(DATASET_RAW_PATH, 'google-trends-2017', 'prepared_html', '*.html')))
 
+class CustomReader(DatasetReader):
+    def read(self) -> Iterable[Tuple[str, Dict[str, Any]]]:
+        dataset_path = os.path.join(URL_HTML_PATH, 'custom')
+        for filename in os.listdir(dataset_path):
+            abs_path = os.path.join(dataset_path, filename)
+            page_id = os.path.splitext(os.path.basename(filename))[0]
+            yield page_id, self._build_dict('custom', page_id, self._read_file(abs_path, 'utf-8'))
+        return 
+    
+    def dataset_size(self) -> Optional[int]:
+        return super().dataset_size()
 
 class CombinedDatasetReader(DatasetReader):
     def __init__(self, ground_truth, read_subsets=None):
@@ -361,6 +372,8 @@ def read_raw_dataset(dataset, ground_truth):
             return ReadabilityReader(ground_truth)
         case 'scrapinghub':
             return ScrapingHubReader(ground_truth)
+        case 'custom':
+            return CustomReader(ground_truth)
         case _:
             raise ValueError(f'Invalid dataset: {dataset}')
 
@@ -369,5 +382,9 @@ def read_datasets(datasets: Iterable[str], ground_truth):
     """Read (subsets of) processed and combined datasets."""
     if not os.path.isdir(DATASET_COMBINED_PATH):
         raise FileNotFoundError(errno.ENOENT, 'Combined dataset folder not found', DATASET_COMBINED_PATH)
-
-    return CombinedDatasetReader(ground_truth, datasets)
+    if not os.path.isdir(URL_PATH):
+        raise FileNotFoundError(errno.ENOENT, 'URL folder not found', URL_HTML_PATH)
+    if 'custom' in datasets:
+        return CustomReader(ground_truth)
+    else:
+        return CombinedDatasetReader(ground_truth, datasets)

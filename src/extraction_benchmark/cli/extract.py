@@ -17,12 +17,15 @@ import logging
 
 import click
 from extraction_benchmark.globals import *
+from extraction_benchmark.util import *
 
 
 @click.command()
 @click.option('-m', '--model', type=click.Choice(['all', *MODELS_ALL]), default=['all'],
               help='Extraction models ("all" does not include ensembles)', multiple=True)
 @click.option('--run-ensembles', is_flag=True, help='Run all ensembles (ignores --model)')
+@click.option('-u','--url', help='Run selected models on a single URL (ignores --dataset)', default=None)
+@click.option('-f','--filename', help='Read list of urls from selected file', default=None)
 @click.option('-e', '--exclude-model', type=click.Choice(MODELS_ALL), default=['web2text'], show_default=True,
               help='Exclude models if "all" are selected.', multiple=True)
 @click.option('-d', '--dataset', type=click.Choice(['all', *DATASETS]), default=['all'], multiple=True)
@@ -31,7 +34,7 @@ from extraction_benchmark.globals import *
 @click.option('-s', '--skip-existing', is_flag=True, help='Load existing answer and extract only new')
 @click.option('-p', '--parallelism', help='Number of threads to use', default=os.cpu_count())
 @click.option('-v', '--verbose', help='Verbose output', is_flag=True)
-def extract(model, run_ensembles, exclude_model, dataset, exclude_dataset, skip_existing, parallelism, verbose):
+def extract(model, run_ensembles, url, filename, exclude_model, dataset, exclude_dataset, skip_existing, parallelism, verbose):
     """
     Run main content extractors on the datasets.
     """
@@ -50,6 +53,26 @@ def extract(model, run_ensembles, exclude_model, dataset, exclude_dataset, skip_
         for m in model:
             if m.startswith('ensemble_'):
                 raise click.UsageError('Model outputs need to be generated before ensemble can be run.')
+
+    if url:
+        #Extract html page and put in custom folder in combined datasets
+        #Then set dataset variable to 'custom'
+        if not extract_html_from_urls([url], URL_HTML_PATH):
+            click.echo('Failed to extract url', err = True)
+        dataset = ['custom']
+
+
+    elif filename:
+        if os.path.exists(os.path.join(URL_PATH,filename)):
+            click.echo('File not found.\n'
+                       'Make sure that file is in /datasets/urls under current working directory', err = True)
+        #Extract all html's and put in custom folder in combined datasets
+        #Then set dataset variable to 'custom'
+        urls = extract_urls_from_file(os.path.join(URL_PATH,filename))
+        if not extract_html_from_urls(urls, URL_HTML_PATH):
+            click.echo('Failed to extract urls in file', err = True)
+        dataset = ['custom']
+
 
     if 'all' in dataset:
         dataset = sorted(d for d in DATASETS if d not in exclude_dataset)
@@ -87,3 +110,5 @@ def convert_datasets(dataset, exclude_dataset):
     from extraction_benchmark import extract
     page_ids = extract.extract_ground_truth(dataset)
     extract.extract_raw_html(dataset, page_ids)
+
+
