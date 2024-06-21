@@ -318,7 +318,7 @@ class GoogleTrends2017Reader(L3SGN1Reader):
 
 class CustomReader(DatasetReader):
     def read(self) -> Iterable[Tuple[str, Dict[str, Any]]]:
-        dataset_path = os.path.join(URL_HTML_PATH, 'custom')
+        dataset_path = CUSTOM_HTML_PROCESSED_PATH
         for filename in os.listdir(dataset_path):
             abs_path = os.path.join(dataset_path, filename)
             page_id = os.path.splitext(os.path.basename(filename))[0]
@@ -382,8 +382,8 @@ def read_datasets(datasets: Iterable[str], ground_truth):
     """Read (subsets of) processed and combined datasets."""
     if not os.path.isdir(DATASET_COMBINED_PATH):
         raise FileNotFoundError(errno.ENOENT, 'Combined dataset folder not found', DATASET_COMBINED_PATH)
-    if not os.path.isdir(URL_PATH):
-        raise FileNotFoundError(errno.ENOENT, 'URL folder not found', URL_HTML_PATH)
+    if not os.path.isdir(CUSTOM_PATH):
+        raise FileNotFoundError(errno.ENOENT, 'URL folder not found', CUSTOM_HTML_PATH)
     if 'custom' in datasets:
         return CustomReader(ground_truth)
     else:

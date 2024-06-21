@@ -58,6 +58,8 @@ _MODEL_FRIENDLY_NAME_MAP = dict(
     xpath_text='XPath Text',
 )
 
+CHOSEN_MODELS = []
+
 MODELS = {k: _MODEL_FRIENDLY_NAME_MAP.get(k, k)
           for k in list_extractors(names_only=True, include_ensembles=False)}
 MODELS_ALL = {k: _MODEL_FRIENDLY_NAME_MAP.get(k, k)

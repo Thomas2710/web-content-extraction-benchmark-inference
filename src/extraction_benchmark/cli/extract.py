@@ -24,8 +24,10 @@ from extraction_benchmark.util import *
 @click.option('-m', '--model', type=click.Choice(['all', *MODELS_ALL]), default=['all'],
               help='Extraction models ("all" does not include ensembles)', multiple=True)
 @click.option('--run-ensembles', is_flag=True, help='Run all ensembles (ignores --model)')
+@click.option('--run-ensembles-custom', is_flag=True, help='Run all custom ensembles with specified models')
 @click.option('-u','--url', help='Run selected models on a single URL (ignores --dataset)', default=None)
 @click.option('-f','--filename', help='Read list of urls from selected file', default=None)
+@click.option('-h', '--html', is_flag=True, help='Run selected models on a single HTML file (ignores --dataset)', default=False)
 @click.option('-e', '--exclude-model', type=click.Choice(MODELS_ALL), default=['web2text'], show_default=True,
               help='Exclude models if "all" are selected.', multiple=True)
 @click.option('-d', '--dataset', type=click.Choice(['all', *DATASETS]), default=['all'], multiple=True)
@@ -34,15 +36,18 @@ from extraction_benchmark.util import *
 @click.option('-s', '--skip-existing', is_flag=True, help='Load existing answer and extract only new')
 @click.option('-p', '--parallelism', help='Number of threads to use', default=os.cpu_count())
 @click.option('-v', '--verbose', help='Verbose output', is_flag=True)
-def extract(model, run_ensembles, url, filename, exclude_model, dataset, exclude_dataset, skip_existing, parallelism, verbose):
+def extract(model, run_ensembles, run_ensembles_custom, url, filename, html, exclude_model, dataset, exclude_dataset, skip_existing, parallelism, verbose):
     """
     Run main content extractors on the datasets.
     """
-
+    print('Selected models are' ,model)
     if not os.path.isdir(DATASET_COMBINED_PATH):
         raise click.UsageError('Combined dataset not found. '
                                'Please create the converted dataset first using the "convert-datasets" command.')
-
+    
+    if 'all' not in model: 
+        CHOSEN_MODELS = model
+        print('Chosen models are', CHOSEN_MODELS)
     if run_ensembles:
         model = sorted(m for m in MODELS_ALL if m.startswith('ensemble_') and m not in exclude_model)
     elif 'all' in model:
@@ -54,25 +59,30 @@ def extract(model, run_ensembles, url, filename, exclude_model, dataset, exclude
             if m.startswith('ensemble_'):
                 raise click.UsageError('Model outputs need to be generated before ensemble can be run.')
 
+    if html:
+        if not os.path.exists(CUSTOM_HTML_RAW_PATH):
+            click.echo('HTML file not found.\n'
+                       'Make sure that file is in /datasets/custom/html/raw under current working directory', err = True)
+        process_html_files(CUSTOM_HTML_RAW_PATH, CUSTOM_HTML_PROCESSED_PATH)
+
     if url:
         #Extract html page and put in custom folder in combined datasets
         #Then set dataset variable to 'custom'
-        if not extract_html_from_urls([url], URL_HTML_PATH):
+        if not extract_html_from_urls([url], CUSTOM_HTML_PATH):
             click.echo('Failed to extract url', err = True)
-        dataset = ['custom']
 
-
-    elif filename:
-        if os.path.exists(os.path.join(URL_PATH,filename)):
+    if filename:
+        if not os.path.exists(os.path.join(CUSTOM_PATH,filename)):
             click.echo('File not found.\n'
-                       'Make sure that file is in /datasets/urls under current working directory', err = True)
+                       'Make sure that file is in /datasets/custom under current working directory', err = True)
         #Extract all html's and put in custom folder in combined datasets
         #Then set dataset variable to 'custom'
-        urls = extract_urls_from_file(os.path.join(URL_PATH,filename))
-        if not extract_html_from_urls(urls, URL_HTML_PATH):
+        urls = extract_urls_from_file(os.path.join(CUSTOM_PATH,filename))
+        if not extract_html_from_urls(urls, CUSTOM_HTML_PATH):
             click.echo('Failed to extract urls in file', err = True)
-        dataset = ['custom']
 
+    if html or url or filename:
+        dataset = ['custom']
 
     if 'all' in dataset:
         dataset = sorted(d for d in DATASETS if d not in exclude_dataset)

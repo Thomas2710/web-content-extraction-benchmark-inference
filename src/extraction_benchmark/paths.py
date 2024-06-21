@@ -18,9 +18,11 @@ ROOT_PATH = os.path.realpath(os.path.join(os.getcwd()))
 DATASET_PATH = os.path.join(ROOT_PATH, 'datasets')
 
 
+CUSTOM_PATH = os.path.join(DATASET_PATH, 'custom')
+CUSTOM_HTML_PATH = os.path.join(CUSTOM_PATH, 'html')
+CUSTOM_HTML_PROCESSED_PATH = os.path.join(CUSTOM_HTML_PATH, 'processed')
+CUSTOM_HTML_RAW_PATH = os.path.join(CUSTOM_HTML_PATH, 'raw')
 
-URL_PATH = os.path.join(DATASET_PATH, 'urls')
-URL_HTML_PATH = os.path.join(URL_PATH, 'html')
 DATASET_RAW_PATH = os.path.join(DATASET_PATH, 'raw')
 DATASET_COMBINED_PATH = os.path.join(DATASET_PATH, 'combined')
 

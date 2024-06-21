@@ -46,3 +46,6 @@ venv.bak/
 
 # Boilerpipe JVM crash dumps
 *.log
+#Folders
+datasets/
+outputs/

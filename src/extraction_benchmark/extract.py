@@ -134,7 +134,6 @@ def extract(models, datasets, skip_existing, parallelism, verbose=False):
     :param parallelism: number of parallel workers
     :param verbose: log error information
     """
-
     model = [(getattr(extractors, 'extract_' + m), m) for m in models]
     jobs = list(product(model, datasets))
 

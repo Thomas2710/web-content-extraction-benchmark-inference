@@ -47,7 +47,6 @@ def pad_str_space(s):
 
 def extract_majority_vote(html, page_id, input_models, model_weights, vote_threshold, ngram_size=5):
     _load_model_answers(input_models)
-
     tree = HTMLTree.parse(html)
     text = pad_str_zero(extract_plain_text(
         tree, main_content=False, preserve_formatting=False, list_bullets=False,

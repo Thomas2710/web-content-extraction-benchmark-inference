@@ -14,7 +14,6 @@
 
 import re
 
-
 def extract_bs4(html, **_):
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(html, 'html.parser')
@@ -171,7 +170,7 @@ def extract_extractnet(html, **_):
     return Extractor().extract(html, encoding='utf8').get('content', '')
 
 
-def _get_ensemble_model_list(best_only=False, weighted=False):
+def _get_ensemble_model_list(best_only=False, weighted=False, custom = False):
     def _ls():
         if best_only or weighted:
             return [
@@ -186,30 +185,44 @@ def _get_ensemble_model_list(best_only=False, weighted=False):
                 (extract_boilerpipe, 1),
             ]
 
-        return [(m, 1) for m in list_extractors(names_only=False, include_ensembles=False)]
+        return [(m, 1) for m in list_extractors(names_only=False, include_ensembles=False, custom = custom)]
 
     return zip(*[(m.__name__.replace('extract_', ''), w) for m, w in _ls()])
 
 
 def extract_ensemble_majority(html, page_id):
+    from extraction_benchmark.globals import CHOSEN_MODELS
     from extraction_benchmark.extractors import ensemble
-    models, weights = _get_ensemble_model_list()
+    if CHOSEN_MODELS:
+        models, weights = _get_ensemble_model_list(custom=True)
+    else:
+        models, weights = _get_ensemble_model_list(custom=False)
     return ensemble.extract_majority_vote(html, page_id, models, weights, int(len(models) * .66))
 
 
 def extract_ensemble_best(html, page_id):
+    from extraction_benchmark.globals import CHOSEN_MODELS
     from extraction_benchmark.extractors import ensemble
-    models, weights = _get_ensemble_model_list(best_only=True)
+    if CHOSEN_MODELS:
+        models, weights = _get_ensemble_model_list(custom = True)
+    else:
+        models, weights = _get_ensemble_model_list(custom = False, best_only = True)
     return ensemble.extract_majority_vote(html, page_id, models, weights, int(len(models) * .66))
 
 
 def extract_ensemble_weighted(html, page_id):
+    from extraction_benchmark.globals import CHOSEN_MODELS
     from extraction_benchmark.extractors import ensemble
+    if CHOSEN_MODELS:
+        models, weights = _get_ensemble_model_list(custom = True)
+    else:
+        models, weights = _get_ensemble_model_list(custom = False, best_only = True, weighted = True)
     models, weights = _get_ensemble_model_list(best_only=True, weighted=True)
     return ensemble.extract_majority_vote(html, page_id, models, weights, int(len(models) * .66))
 
 
-def list_extractors(names_only=True, include_ensembles=False):
+def list_extractors(names_only=True, include_ensembles=False, custom=False):
+    from extraction_benchmark.globals import CHOSEN_MODELS
     """
     Get a list of all supported extraction systems.
 
@@ -218,4 +231,5 @@ def list_extractors(names_only=True, include_ensembles=False):
     :return: list of extractor names or functions
     """
     return [(n.replace('extract_', '') if names_only else m) for n, m in globals().items()
-            if n.startswith('extract_') and (not n.startswith('extract_ensemble') or include_ensembles)]
+            if n.startswith('extract_') and (not n.startswith('extract_ensemble') or include_ensembles) and (m in CHOSEN_MODELS or not custom)]
+
