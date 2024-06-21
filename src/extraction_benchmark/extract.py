@@ -30,6 +30,17 @@ from extraction_benchmark.extractors import extractors
 from extraction_benchmark.paths import *
 
 
+class GlobalVars:
+    CHOSEN_MODELS = []
+
+    @staticmethod 
+    def set_chosen_models(models):
+        GlobalVars.CHOSEN_MODELS = models
+    
+    @staticmethod
+    def get_chosen_models():
+        return GlobalVars.CHOSEN_MODELS
+
 def _dict_to_jsonl(filepath, lines_dict: Dict[str, Any]):
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     with open(filepath, 'w') as f:
@@ -78,14 +89,13 @@ def extract_raw_html(datasets, page_id_whitelist=None):
                     f.write(val['html'])
 
 
-def _extract_with_model_expand_args(args, skip_existing=False, verbose=False):
-    _extract_with_model(*args, skip_existing=skip_existing, verbose=verbose)
+def _extract_with_model_expand_args(args, chosen_models=[],  skip_existing=False, verbose=False):
+    _extract_with_model(*args, chosen_models, skip_existing=skip_existing, verbose=verbose)
 
 
-def _extract_with_model(model, dataset, skip_existing=False, verbose=False):
+def _extract_with_model(model, dataset, chosen_models = [], skip_existing=False, verbose=False):
     model, model_name = model
     out_path = os.path.join(MODEL_OUTPUTS_PATH, dataset, model_name + '.jsonl')
-
     logger = logging.getLogger('wceb-extract')
     logger.setLevel(logging.INFO if verbose else logging.ERROR)
 
@@ -105,13 +115,10 @@ def _extract_with_model(model, dataset, skip_existing=False, verbose=False):
 
             out_data = dict(plaintext='', model=model_name)
             try:
-                with redirect_stdout(io.StringIO()) as stdout, redirect_stderr(io.StringIO()) as stderr:
+                if model_name.startswith('ensemble_'):
+                    out_data['plaintext'] = model(in_data['html'], page_id=file_hash, chosen_models = chosen_models) or ''
+                else:
                     out_data['plaintext'] = model(in_data['html'], page_id=file_hash) or ''
-
-                if stdout.getvalue():
-                    logger.info(stdout.getvalue().strip())
-                if stderr.getvalue():
-                    logger.warning(stderr.getvalue().strip())
             except Exception as e:
                 logger.warning(f'Error in model {model_name} while extracting {dataset} ({file_hash}):')
                 logger.warning(str(e))
@@ -124,7 +131,7 @@ def _extract_with_model(model, dataset, skip_existing=False, verbose=False):
     _dict_to_jsonl(out_path, extracted)
 
 
-def extract(models, datasets, skip_existing, parallelism, verbose=False):
+def extract(models, chosen_models, datasets, skip_existing, parallelism, verbose=False):
     """
     Extract datasets with the selected extraction models.
 
@@ -134,6 +141,7 @@ def extract(models, datasets, skip_existing, parallelism, verbose=False):
     :param parallelism: number of parallel workers
     :param verbose: log error information
     """
+
     model = [(getattr(extractors, 'extract_' + m), m) for m in models]
     jobs = list(product(model, datasets))
 
@@ -144,13 +152,13 @@ def extract(models, datasets, skip_existing, parallelism, verbose=False):
     if parallelism == 1:
         with click.progressbar(jobs, label='Running extrators', item_show_func=item_show_func) as progress:
             for job in progress:
-                _extract_with_model_expand_args(job)
+                _extract_with_model_expand_args(job, chosen_models=chosen_models)
         return
 
     with get_context('spawn').Pool(processes=parallelism) as pool:
         try:
             with click.progressbar(pool.imap_unordered(partial(_extract_with_model_expand_args,
-                                                               skip_existing=skip_existing, verbose=verbose), jobs),
+                                                               skip_existing=skip_existing, verbose=verbose, chosen_models = chosen_models), jobs),
                                    length=len(jobs), label='Running extrators') as progress:
                 for _ in progress:
                     pass

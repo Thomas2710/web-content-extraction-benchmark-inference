@@ -170,9 +170,10 @@ def extract_extractnet(html, **_):
     return Extractor().extract(html, encoding='utf8').get('content', '')
 
 
-def _get_ensemble_model_list(best_only=False, weighted=False, custom = False):
+def _get_ensemble_model_list(best_only=False, weighted=False, chosen_models = []):
     def _ls():
         if best_only or weighted:
+            print('ENTERING IF, WRONG!!')
             return [
                 (extract_goose3, 2 if weighted else 1),
                 (extract_readability, 2 if weighted else 1),
@@ -185,44 +186,37 @@ def _get_ensemble_model_list(best_only=False, weighted=False, custom = False):
                 (extract_boilerpipe, 1),
             ]
 
-        return [(m, 1) for m in list_extractors(names_only=False, include_ensembles=False, custom = custom)]
+        return [(m, 1) for m in list_extractors(names_only=False, include_ensembles=False, chosen_models = chosen_models)]
+    return_value = zip(*[(m.__name__.replace('extract_', ''), w) for m, w in _ls()])
+    return return_value
 
-    return zip(*[(m.__name__.replace('extract_', ''), w) for m, w in _ls()])
 
-
-def extract_ensemble_majority(html, page_id):
-    from extraction_benchmark.globals import CHOSEN_MODELS
+def extract_ensemble_majority(html, page_id, chosen_models = []):
     from extraction_benchmark.extractors import ensemble
-    if CHOSEN_MODELS:
-        models, weights = _get_ensemble_model_list(custom=True)
-    else:
-        models, weights = _get_ensemble_model_list(custom=False)
+    models, weights = _get_ensemble_model_list(chosen_models = chosen_models)
     return ensemble.extract_majority_vote(html, page_id, models, weights, int(len(models) * .66))
 
 
-def extract_ensemble_best(html, page_id):
-    from extraction_benchmark.globals import CHOSEN_MODELS
+def extract_ensemble_best(html, page_id, chosen_models = []):
     from extraction_benchmark.extractors import ensemble
-    if CHOSEN_MODELS:
-        models, weights = _get_ensemble_model_list(custom = True)
+    if models:
+        models, weights = _get_ensemble_model_list(shosen_models = chosen_models)
     else:
-        models, weights = _get_ensemble_model_list(custom = False, best_only = True)
+        models, weights = _get_ensemble_model_list(chosen_models = chosen_models, best_only = True)
     return ensemble.extract_majority_vote(html, page_id, models, weights, int(len(models) * .66))
 
 
-def extract_ensemble_weighted(html, page_id):
-    from extraction_benchmark.globals import CHOSEN_MODELS
+def extract_ensemble_weighted(html, page_id, chosen_models = []):
     from extraction_benchmark.extractors import ensemble
-    if CHOSEN_MODELS:
-        models, weights = _get_ensemble_model_list(custom = True)
+    if models:
+        models, weights = _get_ensemble_model_list(chosen_models = chosen_models)
     else:
-        models, weights = _get_ensemble_model_list(custom = False, best_only = True, weighted = True)
-    models, weights = _get_ensemble_model_list(best_only=True, weighted=True)
+        models, weights = _get_ensemble_model_list(chosen_models = chosen_models, best_only = True, weighted = True)
+    models, weights = _get_ensemble_model_list(chosen_models = chosen_models, best_only=True, weighted=True)
     return ensemble.extract_majority_vote(html, page_id, models, weights, int(len(models) * .66))
 
 
-def list_extractors(names_only=True, include_ensembles=False, custom=False):
-    from extraction_benchmark.globals import CHOSEN_MODELS
+def list_extractors(names_only=True, include_ensembles=False, chosen_models = []):
     """
     Get a list of all supported extraction systems.
 
@@ -230,6 +224,10 @@ def list_extractors(names_only=True, include_ensembles=False, custom=False):
     :param include_ensembles: include ensemble extractors in the list
     :return: list of extractor names or functions
     """
-    return [(n.replace('extract_', '') if names_only else m) for n, m in globals().items()
-            if n.startswith('extract_') and (not n.startswith('extract_ensemble') or include_ensembles) and (m in CHOSEN_MODELS or not custom)]
+
+    models = [(n.replace('extract_', '') if names_only else m) for n, m in globals().items()
+            if n.startswith('extract_') and (not n.startswith('extract_ensemble') or include_ensembles)]
+    if not names_only and chosen_models:
+        models = [m for m in models if m.__name__.replace('extract_', '') in chosen_models]
+    return models
 

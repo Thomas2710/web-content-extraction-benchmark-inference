@@ -14,7 +14,6 @@
 
 import os
 import logging
-
 import click
 from extraction_benchmark.globals import *
 from extraction_benchmark.util import *
@@ -24,10 +23,9 @@ from extraction_benchmark.util import *
 @click.option('-m', '--model', type=click.Choice(['all', *MODELS_ALL]), default=['all'],
               help='Extraction models ("all" does not include ensembles)', multiple=True)
 @click.option('--run-ensembles', is_flag=True, help='Run all ensembles (ignores --model)')
-@click.option('--run-ensembles-custom', is_flag=True, help='Run all custom ensembles with specified models')
 @click.option('-u','--url', help='Run selected models on a single URL (ignores --dataset)', default=None)
-@click.option('-f','--filename', help='Read list of urls from selected file', default=None)
-@click.option('-h', '--html', is_flag=True, help='Run selected models on a single HTML file (ignores --dataset)', default=False)
+@click.option('-f','--filename', help='Read list of urls from selected file (ignores --dataset)', default=None)
+@click.option('-p', '--pages', is_flag=True, help='Run selected models on HTML files (ignores --dataset)', default=False)
 @click.option('-e', '--exclude-model', type=click.Choice(MODELS_ALL), default=['web2text'], show_default=True,
               help='Exclude models if "all" are selected.', multiple=True)
 @click.option('-d', '--dataset', type=click.Choice(['all', *DATASETS]), default=['all'], multiple=True)
@@ -36,20 +34,23 @@ from extraction_benchmark.util import *
 @click.option('-s', '--skip-existing', is_flag=True, help='Load existing answer and extract only new')
 @click.option('-p', '--parallelism', help='Number of threads to use', default=os.cpu_count())
 @click.option('-v', '--verbose', help='Verbose output', is_flag=True)
-def extract(model, run_ensembles, run_ensembles_custom, url, filename, html, exclude_model, dataset, exclude_dataset, skip_existing, parallelism, verbose):
+def extract(model, run_ensembles, url, filename, pages, exclude_model, dataset, exclude_dataset, skip_existing, parallelism, verbose):
     """
     Run main content extractors on the datasets.
     """
-    print('Selected models are' ,model)
     if not os.path.isdir(DATASET_COMBINED_PATH):
         raise click.UsageError('Combined dataset not found. '
                                'Please create the converted dataset first using the "convert-datasets" command.')
     
-    if 'all' not in model: 
-        CHOSEN_MODELS = model
-        print('Chosen models are', CHOSEN_MODELS)
+    chosen_models = []
+    if 'all' not in model:
+        chosen_models = model
+
     if run_ensembles:
-        model = sorted(m for m in MODELS_ALL if m.startswith('ensemble_') and m not in exclude_model)
+        if chosen_models:
+            model = sorted(m for m in MODELS_ALL if m.startswith('ensemble_majority') and m not in exclude_model)
+        else:
+            model = sorted(m for m in MODELS_ALL if m.startswith('ensemble_') and m not in exclude_model)
     elif 'all' in model:
         model = sorted(m for m in MODELS if m not in exclude_model)
         click.confirm('This will run ALL models. Continue?', abort=True)
@@ -59,7 +60,7 @@ def extract(model, run_ensembles, run_ensembles_custom, url, filename, html, exc
             if m.startswith('ensemble_'):
                 raise click.UsageError('Model outputs need to be generated before ensemble can be run.')
 
-    if html:
+    if pages:
         if not os.path.exists(CUSTOM_HTML_RAW_PATH):
             click.echo('HTML file not found.\n'
                        'Make sure that file is in /datasets/custom/html/raw under current working directory', err = True)
@@ -81,7 +82,7 @@ def extract(model, run_ensembles, run_ensembles_custom, url, filename, html, exc
         if not extract_html_from_urls(urls, CUSTOM_HTML_PATH):
             click.echo('Failed to extract urls in file', err = True)
 
-    if html or url or filename:
+    if pages or url or filename:
         dataset = ['custom']
 
     if 'all' in dataset:
@@ -98,7 +99,7 @@ def extract(model, run_ensembles, run_ensembles_custom, url, filename, html, exc
                    'try running with --parallelism=1.', err=True)
 
     from extraction_benchmark import extract
-    extract.extract(model, dataset, skip_existing, parallelism, verbose)
+    extract.extract(model, chosen_models, dataset, skip_existing, parallelism, verbose)
 
 
 @click.command()
