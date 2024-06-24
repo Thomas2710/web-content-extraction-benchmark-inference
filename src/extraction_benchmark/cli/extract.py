@@ -22,7 +22,7 @@ from extraction_benchmark.util import *
 @click.command()
 @click.option('-m', '--model', type=click.Choice(['all', *MODELS_ALL]), default=['all'],
               help='Extraction models ("all" does not include ensembles)', multiple=True)
-@click.option('--run-ensembles', is_flag=True, help='Run all ensembles (ignores --model)')
+@click.option('--run-ensembles', is_flag=True, help='Run ensembles')
 @click.option('-u','--url', help='Run selected models on a single URL (ignores --dataset)', default=None)
 @click.option('-f','--filename', help='Read list of urls from selected file (ignores --dataset)', default=None)
 @click.option('-p', '--pages', is_flag=True, help='Run selected models on HTML files (ignores --dataset)', default=False)
@@ -38,9 +38,6 @@ def extract(model, run_ensembles, url, filename, pages, exclude_model, dataset, 
     """
     Run main content extractors on the datasets.
     """
-    if not os.path.isdir(DATASET_COMBINED_PATH):
-        raise click.UsageError('Combined dataset not found. '
-                               'Please create the converted dataset first using the "convert-datasets" command.')
     
     chosen_models = []
     if 'all' not in model:
@@ -84,7 +81,10 @@ def extract(model, run_ensembles, url, filename, pages, exclude_model, dataset, 
 
     if pages or url or filename:
         dataset = ['custom']
-
+    elif not os.path.isdir(DATASET_COMBINED_PATH):
+        raise click.UsageError('Combined dataset not found. '
+                               'Please create the converted dataset first using the "convert-datasets" command.')
+    
     if 'all' in dataset:
         dataset = sorted(d for d in DATASETS if d not in exclude_dataset)
 

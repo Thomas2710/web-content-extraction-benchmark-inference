@@ -128,22 +128,27 @@ def get_hash_from_url(url:str):
     return file_id
 
 def extract_html_from_urls(urls:list, path:str):
-    custom_path = os.path.join(path, 'custom')
+    processed_path = os.path.join(path, 'processed')
     association_path = os.path.join(path, 'url_association')
+    if not os.path.exists(processed_path):
+        os.makedirs(processed_path)
+    if not os.path.exists(association_path):
+        os.makedirs(association_path)
+
     rvalue = True
     for url in urls:
         try:
             response = requests.get(url)
             #response.raise_for_status()  # This will raise an error if the request was unsuccessful
 
+            file_id = get_hash_from_url(url)
 
-            file = os.path.join(custom_path, file_id + '.html')
+            file = os.path.join(processed_path, file_id + '.html')
 
             if os.path.isfile(file):
                 print('File already exists')
                 continue
-            
-            file_id = get_hash_from_url(url)
+
             association = os.path.join(association_path, file_id + '.txt')
 
             soup = BeautifulSoup(response.content, 'html.parser')
