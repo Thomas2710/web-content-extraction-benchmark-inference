@@ -1,5 +1,6 @@
 import requests
 from abc import ABCMeta, abstractmethod
+import json
 
 class Fetcher():
     def __init__(self) -> None:
@@ -9,7 +10,7 @@ class Fetcher():
         pass
 
 
-class gdelt(Fetcher):
+class GDELT(Fetcher):
     def __init__(self) -> None:
         self.base_url = 'http://api.gdeltproject.org/api/v2/doc/doc?query='
         self.rss_url = 'http://data.gdeltproject.org/gdeltv3/gal/feed.rss'
@@ -61,9 +62,14 @@ class gdelt(Fetcher):
     def get_data(self, keyword='', domain='', language='', mode='ArtList', timespan='1weeks'):
         query = self.build_query(keyword, domain, language)
         data = self.get_gdelt_data(query, mode, timespan)
-        print('GDELT returned data type is ', data['articles'])
         return data
 
+    def save_data(self, data, file):
+        if file[-4:] == '.txt':
+            with open(file, 'w') as f:
+                for article in data['articles']:
+                    f.write(f"{article['url']}\n")
+                  
 # Main function
 if __name__ == "__main__":
     # Define your query here
