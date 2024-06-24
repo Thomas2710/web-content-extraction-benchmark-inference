@@ -15,3 +15,4 @@
 from .complexity import complexity
 from .eval import eval
 from .extract import convert_datasets, extract
+from .fetch_urls import fetch

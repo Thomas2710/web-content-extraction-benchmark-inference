@@ -35,6 +35,27 @@ if os.path.isdir(DATASET_RAW_PATH):
 else:
     DATASETS = {}
 
+_SOURCES_FRIENDLY_NAME_MAP = {
+    'gdelt': 'gdelt',
+}
+
+SOURCES = {k: _SOURCES_FRIENDLY_NAME_MAP.get(k, k) for k in _SOURCES_FRIENDLY_NAME_MAP.keys()}
+MODES = ['ArtList',
+          'ArtGallery', 
+          'ImageCollage', 
+          'ImageCollageInfo',
+          'ImageGallery',
+          'ImageCollageShare', 
+          'TimelineVol', 
+          'TimelineVolRaw', 
+          'TimelineVolInfo' , 
+          'TimelineTone', 
+          'TimelineLang', 
+          'TimelineSourceCountry', 
+          'ToneChart', 
+          'WordCloudImageTags', 
+          'WordCloudImageWebTags']
+
 _MODEL_FRIENDLY_NAME_MAP = dict(
     ensemble_best='(Best only)',
     ensemble_weighted='(Best weighted)',
@@ -58,7 +79,6 @@ _MODEL_FRIENDLY_NAME_MAP = dict(
     web2text='Web2Text',
     xpath_text='XPath Text',
 )
-
 
 MODELS = {k: _MODEL_FRIENDLY_NAME_MAP.get(k, k)
           for k in list_extractors(names_only=True, include_ensembles=False)}
