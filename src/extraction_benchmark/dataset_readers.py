@@ -385,7 +385,6 @@ def read_datasets(datasets: Iterable[str], ground_truth):
     if not os.path.isdir(CUSTOM_PATH):
         raise FileNotFoundError(errno.ENOENT, 'URL folder not found', CUSTOM_HTML_PATH)
     if 'custom' in datasets:
-        print('entering custom')
         return CustomReader(ground_truth)
     else:
         return CombinedDatasetReader(ground_truth, datasets)

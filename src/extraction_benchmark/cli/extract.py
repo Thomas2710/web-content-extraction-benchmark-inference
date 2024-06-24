@@ -98,6 +98,7 @@ def extract(model, run_ensembles, url, filename, pages, exclude_model, dataset, 
         click.echo('WARNING: Deep neural models selected. If you run into GPU memory issues, '
                    'try running with --parallelism=1.', err=True)
 
+    print(dataset)
     from extraction_benchmark import extract
     extract.extract(model, chosen_models, dataset, skip_existing, parallelism, verbose)
 

@@ -96,8 +96,6 @@ def _extract_with_model_expand_args(args, chosen_models=[],  skip_existing=False
 def _extract_with_model(model, dataset, chosen_models = [], skip_existing=False, verbose=False):
     model, model_name = model
     out_path = os.path.join(MODEL_OUTPUTS_PATH, dataset, model_name + '.jsonl')
-    print('model_name is ', model_name)
-    print('dataset is ', dataset )
     logger = logging.getLogger('wceb-extract')
     logger.setLevel(logging.INFO if verbose else logging.ERROR)
 
@@ -110,18 +108,13 @@ def _extract_with_model(model, dataset, chosen_models = [], skip_existing=False,
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
         for file_hash, in_data in read_datasets([dataset], False):
-            print('read datasets is failing')
             if file_hash in extracted:
                 continue
-            print('after file hash')
             out_data = dict(plaintext='', model=model_name)
-            print('before try')
             try:
                 if model_name.startswith('ensemble_'):
-                    print('entering ensemble')
                     out_data['plaintext'] = model(in_data['html'], page_id=file_hash, chosen_models = chosen_models) or ''
                 else:
-                    print('entering out_data correctly')
                     out_data['plaintext'] = model(in_data['html'], page_id=file_hash) or ''
             except Exception as e:
                 logger.warning(f'Error in model {model_name} while extracting {dataset} ({file_hash}):')
