@@ -71,3 +71,9 @@ tqdm = "^4.64.1"
 
 [tool.poetry.scripts]
 wceb = "extraction_benchmark.wceb:main"
+
+[[tool.poetry.source]]
+name = "news-please"
+url = "https://pypi.org/project/news-please/"
+priority = "supplemental"
+

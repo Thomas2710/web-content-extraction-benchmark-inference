@@ -37,6 +37,8 @@ else:
 
 _SOURCES_FRIENDLY_NAME_MAP = {
     'gdelt': 'gdelt',
+    'npbuild' : 'npbuild',
+    'newsplease' : 'newsplease',
 }
 
 SOURCES = {k: _SOURCES_FRIENDLY_NAME_MAP.get(k, k) for k in _SOURCES_FRIENDLY_NAME_MAP.keys()}

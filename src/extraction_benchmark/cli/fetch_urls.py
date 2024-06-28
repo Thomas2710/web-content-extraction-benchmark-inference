@@ -1,4 +1,5 @@
 import click
+import validators
 from extraction_benchmark.globals import *
 
 
@@ -23,6 +24,24 @@ def fetch(source, domain, keyword, language, mode, timespan):
             if timespan[1:] not in ['days', 'weeks', 'months', 'years']:
                 click.echo('Invalid timespan. Must be in the format "Xdays", "Xweeks", "Xmonths" or "Xyears".', err=True)
                 return
+    
+    if source == 'npbuild':
+        if not domain:
+            click.echo('Domain must be provided for npbuild source.', err=True)
+            exit()
+        elif not validators.url(domain):
+            click.echo('Domain must be a valid url', err=True)
+            exit()
+    '''
+    if source == 'newsplease':
+        if not domain:
+            click.echo('Domain must be provided for newsplease source.', err=True)
+            exit()
+        elif not validators.url(domain):
+            click.echo('Domain must be a valid url', err=True)
+            exit()
+    '''
+
 
 
     from extraction_benchmark.fetch_urls import fetch_urls
