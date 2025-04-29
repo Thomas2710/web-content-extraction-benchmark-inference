@@ -149,20 +149,4 @@ wceb complexity visualize-clusters
 
 The visualizations will be written to the same output directory as the complexity scores.
 
-## Cite
 
-The paper can be cited as follows:
-
-```bibtex
-@InProceedings{bevendorff:2023,
-  author =    {Janek Bevendorff and Sanket Gupta and Johannes Kiesel and Benno Stein},
-  booktitle = {46th International ACM SIGIR Conference on Research and Development in Information Retrieval (SIGIR 2023)},
-  publisher = {ACM},
-  site =      {Taipei, Taiwan},
-  title =     {{An Empirical Comparison of Web Content Extraction Algorithms}},
-  keywords =  {Main Content Extraction, Boilerplate Removal, Web Data Extraction},
-  year =      2023,
-  url =       {https://dl.acm.org/doi/10.1145/3539618.3591920},
-  doi =       {10.1145/3539618.3591920}
-}
-```
